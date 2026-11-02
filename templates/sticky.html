@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ note.title if note else 'Sticky Note' }} - Smart Notes AI</title>
+    <!-- App Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/app_icon.ico') }}">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Marked JS -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --bg-sticky: #fff7ed;
+            --border-sticky: #fed7aa;
+            --text-sticky: #451a03;
+            --accent-sticky: #f97316;
+        }
+
+        body.dark-sticky {
+            --bg-sticky: #1e1b4b;
+            --border-sticky: #3730a3;
+            --text-sticky: #e0e7ff;
+            --accent-sticky: #818cf8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-sticky);
+            color: var(--text-sticky);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sticky-header {
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.4);
+            border-bottom: 1px solid var(--border-sticky);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            -webkit-app-region: drag;
+        }
+
+        .sticky-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sticky-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            -webkit-app-region: no-drag;
+        }
+
+        .btn-sticky {
+            background: transparent;
+            border: none;
+            color: var(--text-sticky);
+            cursor: pointer;
+            font-size: 13px;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .btn-sticky:hover {
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        .sticky-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            font-size: 13.5px;
+            line-height: 1.6;
+        }
+
+        .markdown-body h1, .markdown-body h2 { font-size: 16px; margin-bottom: 8px; color: var(--accent-sticky); }
+        .markdown-body p { margin-bottom: 10px; }
+        .markdown-body code { background: rgba(0,0,0,0.06); padding: 2px 5px; border-radius: 4px; font-family: 'Fira Code', monospace; }
+        
+        /* 🖼️ REAL VISUAL IMAGES RENDERED IN FLOATING STICKY DESKTOP WINDOW */
+        .markdown-body img {
+            max-width: 100%;
+            max-height: 380px;
+            object-fit: contain;
+            border-radius: 10px;
+            margin: 12px 0;
+            display: block;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+        }
+    </style>
+</head>
+<body>
+    <div class="sticky-header">
+        <div class="sticky-title">
+            <i class="fa-solid fa-thumbtack" style="color: var(--accent-sticky); margin-right: 6px;"></i>
+            {{ note.title if note else 'Sticky Note' }}
+        </div>
+        <div class="sticky-actions">
+            <button class="btn-sticky" id="toggleThemeBtn" title="Toggle Theme"><i class="fa-solid fa-moon"></i></button>
+            <button class="btn-sticky" id="closeBtn" onclick="window.close()" title="Close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+    </div>
+
+    <div class="sticky-body">
+        <div id="contentArea" class="markdown-body"></div>
+    </div>
+
+    <script type="application/json" id="noteContentData">{{ note.content|tojson if note else '""' }}</script>
+    <script>
+        const rawContent = JSON.parse(document.getElementById('noteContentData').textContent);
+        const contentArea = document.getElementById('contentArea');
+
+        if (rawContent) {
+            if (typeof marked !== 'undefined') {
+                contentArea.innerHTML = marked.parse(rawContent);
+            } else {
+                // Fallback replace for images
+                let html = rawContent.replace(/!\[.*?\]\((.*?)\)/g, '<img src="$1" alt="Image">');
+                contentArea.innerHTML = html;
+            }
+        } else {
+            contentArea.innerHTML = '<p style="color: #94a3b8;">Empty sticky note.</p>';
+        }
+
+        document.getElementById('toggleThemeBtn').addEventListener('click', () => {
+            document.body.classList.toggle('dark-sticky');
+        });
+    </script>
+</body>
+</html>

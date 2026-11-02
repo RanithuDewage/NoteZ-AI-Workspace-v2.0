@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Notes AI - Desktop Workspace</title>
+    <!-- App Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/app_icon.ico') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/app_logo.png') }}">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,400&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Marked.js & Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="palette-sky">
+    <div class="app-container">
+        <!-- ✨ CALM AMBIENT STAR PARTICLES & SHOOTING METEORS CANVAS -->
+        <canvas id="ambientBackgroundCanvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 99999; opacity: 0.9;"></canvas>
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <img src="{{ url_for('static', filename='images/app_logo.png') }}" alt="NoteZ Logo" class="logo-img">
+                    <div class="logo-text" id="logoTitleContainer" style="cursor: pointer;" title="Click to view Team NoCtraX Developer Info">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <h2>Note<span style="color: var(--accent-sky);">Z</span></h2>
+                            <span class="pro-tag-pill">PRO</span>
+                        </div>
+                        <span class="version-tag"><i class="fa-solid fa-rocket" style="font-size: 9px; margin-right: 4px; color: var(--accent-sky);"></i> Version 2.0</span>
+                    </div>
+                </div>
+                <div class="sidebar-header-right-actions">
+                    <button class="sidebar-quick-add-btn" id="sidebarCollapseHeaderBtn" title="Hide/Collapse Sidebar (Ctrl + B)" style="width: 32px; height: 32px; font-size: 11px;">
+                        <i class="fa-solid fa-angles-left"></i>
+                    </button>
+                    <button class="sidebar-quick-add-btn" id="sidebarHeaderQuickAddBtn" title="Create New Note (Ctrl + N)">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <button class="btn-icon mobile-close-sidebar" id="closeSidebarBtn">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- USER PROFILE WIDGET IN SIDEBAR -->
+            <div class="sidebar-user-widget" id="userProfileWidget" style="cursor: pointer;" title="Click to Switch Account or Login">
+                <div class="user-avatar-badge" id="userAvatarBadge">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="user-info-text">
+                    <h4 id="userDisplayName">User Profile</h4>
+                    <span id="userEmailText">user@example.com</span>
+                </div>
+                <button class="btn-icon btn-user-settings" id="openAuthModalBtn" title="Switch Account / Sign In" style="margin-right: 4px; color: var(--accent-sky);">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                </button>
+                <button class="btn-icon btn-user-settings" id="openSettingsBtn" title="Account Settings & Cloud Backup">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+            </div>
+
+            <div class="sidebar-action">
+                <button class="btn btn-primary btn-block" id="newNoteBtn">
+                    <i class="fa-solid fa-plus"></i> New Note
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- SECTION 1: WORKSPACE & FILTERS -->
+                <div class="nav-section">
+                    <span class="nav-section-title">WORKSPACE & FILTERS</span>
+                    <ul class="nav-list">
+                        <li class="nav-item active" data-filter="active">
+                            <a href="#"><i class="fa-solid fa-folder-open"></i> All Notes <span class="badge" id="countAll">0</span></a>
+                        </li>
+                        <li class="nav-item" data-filter="pinned">
+                            <a href="#"><i class="fa-solid fa-thumbtack"></i> Pinned <span class="badge" id="countPinned">0</span></a>
+                        </li>
+                        <li class="nav-item" data-filter="favorites">
+                            <a href="#"><i class="fa-solid fa-star"></i> Favorites <span class="badge" id="countFavs">0</span></a>
+                        </li>
+                        <li class="nav-item" data-filter="reminders">
+                            <a href="#"><i class="fa-solid fa-calendar-check"></i> Reminders <span class="badge" id="countReminders">0</span></a>
+                        </li>
+                        <li class="nav-item" data-filter="trashed">
+                            <a href="#" style="display: flex; align-items: center; justify-content: space-between;">
+                                <span><i class="fa-solid fa-trash-can"></i> Trash</span>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <button class="empty-trash-btn-mini" id="emptyTrashSidebarBtn" title="Empty All Trashed Notes" style="background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); color: #f43f5e; border-radius: 6px; padding: 2px 6px; font-size: 10px; font-weight: 700; cursor: pointer;">Clear</button>
+                                    <span class="badge" id="countTrash">0</span>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- SECTION 2: ACADEMIC & MEDIA HUBS -->
+                <div class="nav-section" style="margin-top: 16px;">
+                    <span class="nav-section-title">ACADEMIC & MEDIA HUBS</span>
+                    <ul class="nav-list">
+                        <li class="nav-item" id="navAcademicSubjects">
+                            <a href="#"><i class="fa-solid fa-graduation-cap" style="color: var(--accent-indigo);"></i> Subject Modules <span class="badge" id="sidebarSubjectCountBadge" style="background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo); border: 1px solid rgba(99, 102, 241, 0.3);">4</span></a>
+                        </li>
+                        <li class="nav-item" id="navPhotoVault">
+                            <a href="#"><i class="fa-solid fa-images" style="color: var(--accent-rose);"></i> Photo Vault <span class="badge" id="sidebarPhotoCountBadge" style="background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3);">0</span></a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- SECTION 3: VISUAL & PRODUCTIVITY SUITE -->
+                <div class="nav-section" style="margin-top: 16px;">
+                    <span class="nav-section-title">🚀 VISUAL & PRODUCTIVITY SUITE</span>
+                    <ul class="nav-list">
+                        <li class="nav-item" id="navMindMap">
+                            <a href="#"><i class="fa-solid fa-brain" style="color: var(--accent-indigo);"></i> Mind Map Graph</a>
+                        </li>
+                        <li class="nav-item" id="navKanban">
+                            <a href="#"><i class="fa-solid fa-table-columns" style="color: var(--accent-emerald);"></i> Task Kanban Board</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-header">
+                        <span class="nav-section-title">CATEGORIES</span>
+                    </div>
+                    <ul class="nav-list" id="categoryNavList">
+                        <!-- Loaded dynamically -->
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="sidebar-footer-btn stats-btn" id="openStatsBtn" title="Writing Analytics & Productivity Charts">
+                    <div class="footer-btn-icon-badge">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </div>
+                    <span>Analytics</span>
+                </button>
+                <button class="sidebar-footer-btn cloud-btn" id="cloudBackupBtn" title="5TB Cloud Backup & Account Dashboard">
+                    <div class="footer-btn-icon-badge">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <span>Cloud Backup</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN WORKSPACE -->
+        <main class="main-content">
+            <!-- TOP BAR / HEADER -->
+            <header class="topbar">
+                <button class="btn-icon sidebar-toggle-btn" id="sidebarToggleTopbarBtn" title="Toggle Collapsible Sidebar (Ctrl + B)" style="margin-right: 8px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--accent-sky); font-size: 15px;">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+
+                <div class="search-bar-container">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Search notes by title, content, or tag... (Ctrl + K)" autocomplete="off">
+                    <button class="search-clear-btn" id="searchClearBtn" style="display: none;">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="topbar-actions">
+                    <!-- 🔥 DAY STREAK BADGE -->
+                    <div class="day-streak-badge" id="dayStreakBadge" title="Click to view 7-Day Writing Streak Tracker" style="cursor: pointer;">
+                        <i class="fa-solid fa-fire fire-icon"></i>
+                        <span id="streakCountText">1 Day Streak</span>
+                    </div>
+
+                    <!-- SECURITY SHIELD BADGE -->
+                    <div class="security-shield-badge" id="securityShieldBtn" title="Click to view Security & AES-256 Encryption Details" style="cursor: pointer;">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>AES-256 Tunnel Active</span>
+                    </div>
+
+                    <!-- DEVELOPER TEAM BADGE -->
+                    <div class="team-noctrax-badge" id="openAboutTeamBtn" title="Developed by Team NoCtraX - Click for Developer Info" style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(14, 165, 233, 0.15)); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 14px; color: var(--accent-indigo); font-size: 11.5px; font-weight: 700; cursor: pointer; transition: transform 0.2s ease;">
+                        <img src="{{ url_for('static', filename='images/team_noctrax_logo.jpg') }}" alt="Team NoCtraX Logo" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(14, 165, 233, 0.5);">
+                        <span>Team NoCtraX</span>
+                    </div>
+
+                    <!-- 🎨 GLOBAL APP THEME PALETTE PICKER BUTTON -->
+                    <div style="position: relative;">
+                        <button class="btn-icon theme-toggle-btn" id="themePaletteBtn" title="Customize App Main Theme Palette">
+                            <i class="fa-solid fa-palette"></i>
+                        </button>
+
+                        <!-- DROPDOWN PALETTE PRESETS -->
+                        <div class="theme-palette-dropdown-menu" id="themePaletteDropdown">
+                            <div class="theme-palette-title">Choose App Main Theme</div>
+                            <div class="theme-palette-grid">
+                                <div class="theme-palette-item active" data-apptheme="palette-sky">
+                                    <span>🌊 Sky Blue Classic</span>
+                                    <div class="theme-color-dot-indicator" style="background: #0ea5e9;"></div>
+                                </div>
+                                <div class="theme-palette-item" data-apptheme="palette-emerald">
+                                    <span>🌿 Mint Emerald</span>
+                                    <div class="theme-color-dot-indicator" style="background: #10b981;"></div>
+                                </div>
+                                <div class="theme-palette-item" data-apptheme="palette-indigo">
+                                    <span>🔮 Royal Purple</span>
+                                    <div class="theme-color-dot-indicator" style="background: #6366f1;"></div>
+                                </div>
+                                <div class="theme-palette-item" data-apptheme="palette-rose">
+                                    <span>🌸 Sunset Rose</span>
+                                    <div class="theme-color-dot-indicator" style="background: #f43f5e;"></div>
+                                </div>
+                                <div class="theme-palette-item" data-apptheme="palette-amber">
+                                    <span>🟧 Warm Amber Gold</span>
+                                    <div class="theme-color-dot-indicator" style="background: #d97706;"></div>
+                                </div>
+                            </div>
+
+                            <div style="border-top: 1px solid var(--border-color); margin-top: 10px; padding-top: 10px;">
+                                <div class="theme-palette-title">Background Effects</div>
+                                <div class="ambient-stars-toggle-row" id="toggleAmbientStarsBtn" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-main); cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--text-primary); transition: var(--transition-fast);">
+                                    <span>✨ Ambient Moving Stars</span>
+                                    <span id="ambientStarsStatusPill" style="padding: 2px 8px; border-radius: 12px; background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); font-size: 11px; font-weight: 700;">ON</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DARK / LIGHT MODE TOGGLE BUTTON -->
+                    <button class="btn-icon theme-toggle-btn" id="themeToggleBtn" title="Toggle Quick Dark / Light Mode">
+                        <i class="fa-solid fa-moon" id="themeIcon"></i>
+                    </button>
+
+                    <!-- 🔔 NOTIFICATION BELL BUTTON -->
+                    <div style="position: relative;">
+                        <button class="btn-icon notification-bell-btn" id="openNotificationsBtn" title="System & Reminder Notifications" style="position: relative; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--accent-sky); font-size: 15px;">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="notification-badge-dot" id="notificationBadgeDot">3</span>
+                        </button>
+
+                        <!-- NOTIFICATION CENTER DROPDOWN -->
+                        <div class="notification-dropdown-menu" id="notificationDropdown" style="display: none; position: absolute; right: 0; top: 48px; width: 320px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); z-index: 1000; padding: 14px; backdrop-filter: blur(16px);">
+                            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 10px;">
+                                <h4 style="font-size: 13px; font-weight: 700; color: var(--text-primary);"><i class="fa-solid fa-bell" style="color: #f59e0b; margin-right: 6px;"></i> Notifications</h4>
+                                <span style="font-size: 11px; color: var(--accent-sky); cursor: pointer;" id="clearNotificationsBtn">Clear all</span>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 8px;" id="notificationItemsList">
+                                <div style="display: flex; gap: 10px; padding: 8px; border-radius: 8px; background: var(--bg-main); font-size: 12px;">
+                                    <i class="fa-solid fa-fire" style="color: #f59e0b; font-size: 14px; margin-top: 2px;"></i>
+                                    <div>
+                                        <strong style="color: var(--text-primary); display: block;">2-Day Streak Active!</strong>
+                                        <span style="color: var(--text-muted); font-size: 11px;">Keep up your daily note-taking habit.</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 10px; padding: 8px; border-radius: 8px; background: var(--bg-main); font-size: 12px;">
+                                    <i class="fa-solid fa-cloud-arrow-up" style="color: var(--accent-emerald); font-size: 14px; margin-top: 2px;"></i>
+                                    <div>
+                                        <strong style="color: var(--text-primary); display: block;">5TB Cloud Synced</strong>
+                                        <span style="color: var(--text-muted); font-size: 11px;">All notes are securely backed up.</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 10px; padding: 8px; border-radius: 8px; background: var(--bg-main); font-size: 12px;">
+                                    <i class="fa-solid fa-shield-halved" style="color: var(--accent-sky); font-size: 14px; margin-top: 2px;"></i>
+                                    <div>
+                                        <strong style="color: var(--text-primary); display: block;">AES-256 Tunnel Active</strong>
+                                        <span style="color: var(--text-muted); font-size: 11px;">End-to-End Local Encryption Active.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 🤖 AI ASSISTANT CHATBOT BUTTON -->
+                    <button class="btn btn-secondary" id="topbarAiChatBtn" title="Open AI Workspace Assistant Chatbot" style="font-size: 12px; font-weight: 700; gap: 6px;">
+                        <i class="fa-solid fa-robot" style="color: var(--accent-sky);"></i>
+                        <span>AI Chatbot</span>
+                    </button>
+
+                    <!-- 🪄 AI SUMMARIZER BUTTON -->
+                    <button class="btn btn-secondary" id="topAiBtn" title="Generate AI Insights & Summary" style="font-size: 12px; font-weight: 700; gap: 6px;">
+                        <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent-indigo);"></i>
+                        <span>Summarizer</span>
+                    </button>
+
+                    <!-- 🪶 QUILLBOT AI PARAPHRASER BUTTON -->
+                    <button class="btn btn-secondary" id="topbarQuillbotBtn" title="Open QuillBot AI Paraphraser & Grammar Checker" style="font-size: 12px; font-weight: 700; gap: 6px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15)); border: 1px solid rgba(34, 197, 94, 0.3); color: #22c55e;">
+                        <i class="fa-solid fa-feather-pointed" style="color: #22c55e;"></i>
+                        <span>QuillBot AI</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- TWO COLUMN SPLIT VIEW -->
+            <div class="workspace-body">
+                <!-- LEFT COLUMN: NOTES LIST -->
+                <section class="notes-list-pane">
+                    <div class="notes-list-header">
+                        <span class="notes-count-label" id="notesCountLabel">0 Notes</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button class="btn btn-danger-soft" id="emptyTrashHeaderBtn" title="Empty All Trashed Notes" style="display: none; padding: 3px 8px; font-size: 11px; border-radius: 6px;">
+                                <i class="fa-solid fa-trash-arrow-up"></i> Empty Trash
+                            </button>
+                            <div class="sort-selector">
+                                <i class="fa-solid fa-arrow-down-short-wide"></i>
+                                <span>Recent</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="notes-cards-container" id="notesCardsContainer">
+                        <!-- Dynamic Note Cards rendered here -->
+                    </div>
+                </section>
+
+                <!-- RIGHT COLUMN: NOTE EDITOR & RICH VISUAL CANVAS -->
+                <section class="note-editor-pane" id="noteEditorPane">
+                    <div class="empty-state-view" id="emptyStateView">
+                        <div class="empty-state-card">
+                            <div class="empty-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+                            <h3>No Note Selected</h3>
+                            <p>Select a note from the list on the left or create a new note to start editing with AI support.</p>
+                            <button class="btn btn-primary btn-lg" id="emptyNewNoteBtn">
+                                <i class="fa-solid fa-plus"></i> Create Note
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="active-editor-view" id="activeEditorView" style="display: none;">
+                        <!-- EDITOR TOOLBAR -->
+                        <div class="editor-header">
+                            <div class="editor-title-row">
+                                <input type="text" id="editorTitleInput" placeholder="Note Title..." autocomplete="off">
+                            </div>
+
+                            <div class="editor-meta-row">
+                                <div class="meta-item">
+                                    <i class="fa-solid fa-folder"></i>
+                                    <select id="editorCategorySelect">
+                                        <option value="General">General</option>
+                                        <option value="Study">Study</option>
+                                        <option value="Work">Work</option>
+                                        <option value="Code">Code</option>
+                                        <option value="Ideas">Ideas</option>
+                                        <option value="Personal">Personal</option>
+                                    </select>
+                                </div>
+
+                                <div class="meta-item">
+                                    <i class="fa-solid fa-graduation-cap" style="color: var(--accent-indigo);"></i>
+                                    <select id="editorSubjectSelect">
+                                        <option value="">Subject: None</option>
+                                        <!-- Loaded dynamically via JS -->
+                                    </select>
+                                </div>
+
+                                <div class="meta-item">
+                                    <i class="fa-solid fa-tags"></i>
+                                    <input type="text" id="editorTagsInput" placeholder="Tags (comma separated)...">
+                                </div>
+
+                                <div class="meta-item color-picker-group">
+                                    <span class="color-label">Note Color:</span>
+                                    <div class="color-options">
+                                        <button class="color-dot sky active" data-color="sky" title="Sky Blue"></button>
+                                        <button class="color-dot cyan" data-color="cyan" title="Teal"></button>
+                                        <button class="color-dot emerald" data-color="emerald" title="Emerald"></button>
+                                        <button class="color-dot rose" data-color="rose" title="Rose"></button>
+                                        <button class="color-dot amber" data-color="amber" title="Amber"></button>
+                                        <button class="color-dot indigo" data-color="indigo" title="Indigo"></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="editor-action-toolbar">
+                                <div class="action-group-left">
+                                    <button class="btn-icon-toggle" id="editorPinBtn" title="Pin Note">
+                                        <i class="fa-solid fa-thumbtack"></i>
+                                    </button>
+                                    <button class="btn-icon-toggle" id="editorFavBtn" title="Star Favorite">
+                                        <i class="fa-solid fa-star"></i>
+                                    </button>
+                                    <button class="btn-icon-toggle" id="lockNoteBtn" title="PIN Lock / Unlock Note">
+                                        <i class="fa-solid fa-lock-open" id="lockIcon"></i>
+                                    </button>
+                                    <button class="btn-icon-toggle" id="dueDateBtn" title="Set Reminder / Due Date">
+                                        <i class="fa-solid fa-calendar-days"></i>
+                                    </button>
+                                    <button class="btn-icon-toggle" id="popoutStickyBtn" title="Pop-out Floating Desktop Sticky Note">
+                                        <i class="fa-solid fa-up-right-from-square"></i>
+                                    </button>
+                                    <div class="tab-switcher">
+                                        <button class="tab-btn active" id="tabEditBtn"><i class="fa-solid fa-image"></i> Visual Canvas Mode</button>
+                                        <button class="tab-btn" id="tabRawBtn"><i class="fa-solid fa-code"></i> Raw Code Mode</button>
+                                    </div>
+                                </div>
+
+                                <div class="action-group-right">
+                                    <button class="btn btn-primary" id="manualSaveNoteBtn" title="Save Note Now (Ctrl + S)">
+                                        <i class="fa-solid fa-floppy-disk"></i> Save Note
+                                    </button>
+                                    <button class="btn btn-ai-action" id="triggerAiBtn">
+                                        <i class="fa-solid fa-wand-magic-sparkles"></i> AI Summarize
+                                    </button>
+                                    <button class="btn btn-secondary" id="openAiChatDrawerBtn" title="Ask AI About This Note" style="border-color: var(--accent-sky); color: var(--accent-sky);">
+                                        <i class="fa-solid fa-robot"></i> Ask AI Chat
+                                    </button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-secondary dropdown-toggle" id="exportDropdownBtn">
+                                            <i class="fa-solid fa-file-export"></i> Export
+                                        </button>
+                                        <div class="dropdown-menu" id="exportMenu">
+                                            <a href="#" id="exportDocxBtn"><i class="fa-solid fa-file-word" style="color: #2b579a;"></i> MS Word Document (.doc/.docx)</a>
+                                            <a href="#" id="exportPdfBtn"><i class="fa-solid fa-file-pdf" style="color: #f43f5e;"></i> PDF Document (.pdf)</a>
+                                            <a href="#" id="exportMdBtn"><i class="fa-solid fa-file-code"></i> Markdown (.md)</a>
+                                            <a href="#" id="exportTxtBtn"><i class="fa-solid fa-file-lines"></i> Text File (.txt)</a>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-danger-soft" id="editorDeleteBtn" title="Delete Note">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- FORMATTING QUICK TOOLBAR (MS WORD RICH TEXT EXPANDED SUITE) -->
+                            <div class="format-toolbar" id="formatToolbar" style="flex-wrap: wrap; gap: 6px; padding: 8px 12px;">
+                                <!-- FONT FAMILY SELECTOR -->
+                                <div style="display: flex; align-items: center; gap: 4px;" title="Font Family">
+                                    <i class="fa-solid fa-font" style="font-size: 11px; color: var(--text-muted);"></i>
+                                    <select id="fontFamilySelect" class="datetime-picker-input" style="padding: 3px 6px; font-size: 11.5px; height: 28px; width: 110px;">
+                                        <option value="Outfit">Outfit</option>
+                                        <option value="Inter">Inter</option>
+                                        <option value="Roboto">Roboto</option>
+                                        <option value="Fira Code">Fira Code</option>
+                                        <option value="Playfair Display">Playfair</option>
+                                        <option value="Dancing Script">Cursive</option>
+                                    </select>
+                                </div>
+
+                                <!-- FONT SIZE SELECTOR -->
+                                <div style="display: flex; align-items: center; gap: 4px;" title="Font Size">
+                                    <i class="fa-solid fa-text-height" style="font-size: 11px; color: var(--text-muted);"></i>
+                                    <select id="fontSizeSelect" class="datetime-picker-input" style="padding: 3px 6px; font-size: 11.5px; height: 28px; width: 95px;">
+                                        <option value="1">10pt (Small)</option>
+                                        <option value="2">12pt (Normal)</option>
+                                        <option value="3" selected>14pt (Medium)</option>
+                                        <option value="4">18pt (Large)</option>
+                                        <option value="5">24pt (X-Large)</option>
+                                        <option value="6">32pt (Huge)</option>
+                                        <option value="7">48pt (Title)</option>
+                                    </select>
+                                </div>
+
+                                <div class="fmt-divider"></div>
+
+                                <!-- TEXT STYLING -->
+                                <button class="fmt-btn" data-fmt="bold" title="Bold (Ctrl+B)"><i class="fa-solid fa-bold"></i></button>
+                                <button class="fmt-btn" data-fmt="italic" title="Italic (Ctrl+I)"><i class="fa-solid fa-italic"></i></button>
+                                <button class="fmt-btn" data-fmt="underline" title="Underline (Ctrl+U)"><i class="fa-solid fa-underline"></i></button>
+                                <button class="fmt-btn" data-fmt="strikethrough" title="Strikethrough"><i class="fa-solid fa-strikethrough"></i></button>
+
+                                <!-- TEXT COLOR & HIGHLIGHTER -->
+                                <div style="display: flex; align-items: center; gap: 4px; position: relative;">
+                                    <label for="textColorPicker" class="fmt-btn" title="Text Color" style="cursor: pointer; margin: 0; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;">
+                                        <i class="fa-solid fa-font" style="color: var(--accent-sky);"></i>
+                                    </label>
+                                    <input type="color" id="textColorPicker" value="#000000" style="opacity: 0; width: 0; height: 0; position: absolute;">
+
+                                    <label for="textHighlightPicker" class="fmt-btn" title="Text Highlight Color" style="cursor: pointer; margin: 0; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;">
+                                        <i class="fa-solid fa-highlighter" style="color: #f59e0b;"></i>
+                                    </label>
+                                    <input type="color" id="textHighlightPicker" value="#fde047" style="opacity: 0; width: 0; height: 0; position: absolute;">
+                                </div>
+
+                                <div class="fmt-divider"></div>
+
+                                <!-- ALIGNMENTS -->
+                                <button class="fmt-btn" data-fmt="justifyLeft" title="Align Left"><i class="fa-solid fa-align-left"></i></button>
+                                <button class="fmt-btn" data-fmt="justifyCenter" title="Align Center"><i class="fa-solid fa-align-center"></i></button>
+                                <button class="fmt-btn" data-fmt="justifyRight" title="Align Right"><i class="fa-solid fa-align-right"></i></button>
+                                <button class="fmt-btn" data-fmt="justifyFull" title="Justify"><i class="fa-solid fa-align-justify"></i></button>
+
+                                <div class="fmt-divider"></div>
+
+                                <!-- HEADINGS -->
+                                <button class="fmt-btn" data-fmt="h1" title="Heading 1">H1</button>
+                                <button class="fmt-btn" data-fmt="h2" title="Heading 2">H2</button>
+                                <button class="fmt-btn" data-fmt="h3" title="Heading 3">H3</button>
+
+                                <div class="fmt-divider"></div>
+
+                                <!-- LISTS & BLOCKS -->
+                                <button class="fmt-btn" data-fmt="ul" title="Bullet List"><i class="fa-solid fa-list-ul"></i></button>
+                                <button class="fmt-btn" data-fmt="ol" title="Numbered List"><i class="fa-solid fa-list-ol"></i></button>
+                                <button class="fmt-btn" data-fmt="cl" title="Checklist"><i class="fa-solid fa-list-check"></i></button>
+                                <button class="fmt-btn" data-fmt="code" title="Code Block"><i class="fa-solid fa-code"></i></button>
+                                <button class="fmt-btn" data-fmt="quote" title="Quote"><i class="fa-solid fa-quote-right"></i></button>
+
+                                <div class="fmt-divider"></div>
+
+                                <!-- MEDIA & SMART AI TOOLS -->
+                                <button class="fmt-btn action-btn-toolbar" id="openTemplatesModalBtn" title="Choose Layout Template"><i class="fa-solid fa-file-invoice"></i> Templates</button>
+                                <button class="fmt-btn action-btn-toolbar" id="openFlashcardsModalBtn" title="Practice Revision Flashcards"><i class="fa-solid fa-layer-group" style="color: var(--accent-indigo);"></i> Flashcards Quiz</button>
+                                <button class="fmt-btn action-btn-toolbar" id="insertImgBtn" title="Insert Image / Screenshot"><i class="fa-solid fa-image"></i> Insert Image</button>
+                                <button class="fmt-btn action-btn-toolbar" id="openPhotoVaultToolbarBtn" title="Open Photo Vault & Media Gallery Hub"><i class="fa-solid fa-images" style="color: var(--accent-rose);"></i> Photo Vault</button>
+                                <button class="fmt-btn action-btn-toolbar" id="ocrScanBtn" title="Scan & Extract Text from Image (OCR)"><i class="fa-solid fa-eye"></i> OCR Scanner</button>
+                                <button class="fmt-btn action-btn-toolbar" id="recordAudioBtn" title="Record Lecture / Meeting Audio"><i class="fa-solid fa-circle-dot" style="color: #f43f5e;"></i> Record Audio</button>
+                                <button class="fmt-btn action-btn-toolbar" id="attachDocBtn" title="Attach PDF Document"><i class="fa-solid fa-file-pdf" style="color: var(--accent-rose);"></i> Attach PDF</button>
+                                <input type="file" id="imageFileInput" accept="image/*" style="display: none;">
+                                <input type="file" id="ocrFileInput" accept="image/*" style="display: none;">
+                                <input type="file" id="docFileInput" accept=".pdf,.doc,.docx,.txt" style="display: none;">
+                                <button class="fmt-btn action-btn-toolbar voice-btn" id="voiceTypingBtn" title="Voice Typing (Dictation)"><i class="fa-solid fa-microphone"></i> Dictate</button>
+                            </div>
+                        </div>
+
+                        <!-- RICH VISUAL CANVAS & CODE EDITOR AREA -->
+                        <div class="editor-content-area" id="dropZone">
+                            <div class="drag-overlay" id="dragOverlay" style="display: none;">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <span>Drop Image or PDF File Here to Insert</span>
+                            </div>
+
+                            <!-- 🖼️ RICH VISUAL CANVAS (DIRECT VISUAL IMAGES & AUDIO PLAYERS DISPLAYED) -->
+                            <div id="editorVisualCanvas" contenteditable="true" class="rich-visual-canvas" placeholder="Type your notes here... Use [[Note Title]] for Wiki Links!"></div>
+
+                            <!-- RAW CODE TEXTAREA (HIDDEN BY DEFAULT) -->
+                            <textarea id="editorTextarea" style="display: none;" placeholder="Raw code editor..."></textarea>
+                        </div>
+
+                        <!-- EDITOR FOOTER / STATUS BAR -->
+                        <div class="editor-statusbar">
+                            <div class="status-left">
+                                <span class="save-status" id="saveStatus"><i class="fa-solid fa-check-double"></i> Saved</span>
+                                <span id="dueDateStatus" class="due-badge-status"></span>
+                            </div>
+                            <div class="status-right">
+                                <span id="statWordCount">0 words</span>
+                                <span class="status-dot">•</span>
+                                <span id="statCharCount">0 chars</span>
+                                <span class="status-dot">•</span>
+                                <span id="statReadingTime">< 1 min read</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- 🤖 AI ASSISTANT CHAT DRAWER ("ASK AI ABOUT THIS NOTE") -->
+    <div class="ai-chat-drawer" id="aiChatDrawer" style="display: none;">
+        <div class="ai-drawer-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-robot glowing-ai"></i>
+                <h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary);">Ask AI About This Note</h4>
+            </div>
+            <button class="btn-icon" id="closeAiChatDrawerBtn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="ai-drawer-body" id="aiChatMessages">
+            <div class="ai-chat-msg bot">
+                Hello! 👋 I am your Smart AI Note Assistant. Ask me anything about this note!
+            </div>
+        </div>
+        <div class="ai-drawer-quick-pills">
+            <button class="ai-pill-btn" data-q="Generate 5 Quiz Questions from this note">📝 Quiz 5 Qs</button>
+            <button class="ai-pill-btn" data-q="Summarize this note in 3 key bullet points">⚡ 3 Bullets</button>
+            <button class="ai-pill-btn" data-q="Translate main ideas to Sinhala">🌐 Sinhala</button>
+        </div>
+        <div class="ai-drawer-footer">
+            <input type="text" id="aiChatInput" placeholder="Ask AI a question..." autocomplete="off">
+            <button class="btn btn-primary" id="aiChatSendBtn"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- 🎴 FLASHCARDS & QUIZ REVISION MODAL -->
+    <div class="modal-backdrop" id="flashcardsModal" style="display: none;">
+        <div class="modal-content small-modal text-center" style="max-width: 500px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-layer-group glowing-ai" style="color: var(--accent-indigo);"></i>
+                    <h3>Smart Revision Flashcards Deck</h3>
+                </div>
+                <button class="modal-close-btn" id="closeFlashcardsModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="flashcard-container" id="flashcardCard" style="perspective: 1000px; height: 200px; cursor: pointer; margin-bottom: 14px;">
+                    <div class="flashcard-inner" id="flashcardInner" style="width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s ease; background: var(--bg-main); border: 2px solid var(--accent-indigo); border-radius: 14px; padding: 20px; display: flex; align-items: center; justify-content: center;">
+                        <h4 id="flashcardQuestionText" style="font-size: 15px; color: var(--text-primary); font-weight: 600;">Loading Questions...</h4>
+                    </div>
+                </div>
+                <span style="font-size: 11.5px; color: var(--text-muted); display: block; margin-bottom: 12px;">Click card to flip Question ↔ Answer</span>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <button class="btn btn-secondary" id="prevFlashcardBtn"><i class="fa-solid fa-chevron-left"></i> Prev</button>
+                    <span id="flashcardIndexLabel" style="font-size: 12.5px; font-weight: 700; color: var(--accent-indigo);">Card 1 / 5</span>
+                    <button class="btn btn-secondary" id="nextFlashcardBtn">Next <i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📝 READY-MADE NOTE LAYOUT TEMPLATES MODAL -->
+    <div class="modal-backdrop" id="templatesModal" style="display: none;">
+        <div class="modal-content" style="max-width: 620px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-file-invoice glowing-ai"></i>
+                    <h3>Choose Ready-Made Note Template</h3>
+                </div>
+                <button class="modal-close-btn" id="closeTemplatesModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;">
+                    <div class="template-card-item" data-template="study" style="padding: 16px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: var(--transition-fast);">
+                        <h4 style="font-size: 14px; color: var(--accent-sky); margin-bottom: 4px;"><i class="fa-solid fa-graduation-cap"></i> 🎓 Study Notes Template</h4>
+                        <p style="font-size: 12px; color: var(--text-muted);">Main Concept, Key Points, Formulae & Summary section.</p>
+                    </div>
+
+                    <div class="template-card-item" data-template="meeting" style="padding: 16px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: var(--transition-fast);">
+                        <h4 style="font-size: 14px; color: var(--accent-emerald); margin-bottom: 4px;"><i class="fa-solid fa-users"></i> 💼 Meeting Minutes Template</h4>
+                        <p style="font-size: 12px; color: var(--text-muted);">Attendees, Agenda, Decisions, and Action Items table.</p>
+                    </div>
+
+                    <div class="template-card-item" data-template="journal" style="padding: 16px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: var(--transition-fast);">
+                        <h4 style="font-size: 14px; color: var(--accent-rose); margin-bottom: 4px;"><i class="fa-solid fa-book"></i> 📔 Daily Journal Template</h4>
+                        <p style="font-size: 12px; color: var(--text-muted);">Daily Goals, Gratitude, Daily Wins & Reflection.</p>
+                    </div>
+
+                    <div class="template-card-item" data-template="checklist" style="padding: 16px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; transition: var(--transition-fast);">
+                        <h4 style="font-size: 14px; color: var(--accent-amber); margin-bottom: 4px;"><i class="fa-solid fa-list-check"></i> 📋 Project Task Checklist</h4>
+                        <p style="font-size: 12px; color: var(--text-muted);">Project Overview, Milestones, and Todo Checklist.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ☁️ CLOUD BACKUP & DASHBOARD STATUS MODAL -->
+    <div class="modal-backdrop" id="cloudBackupModal" style="display: none;">
+        <div class="modal-content" style="max-width: 540px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-cloud-arrow-up glowing-ai"></i>
+                    <h3>5TB Cloud Backup & Account Dashboard</h3>
+                </div>
+                <button class="modal-close-btn" id="closeCloudBackupModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Cloud Sync Monitor</span>
+                        <span style="padding: 4px 10px; background: rgba(16, 185, 129, 0.12); color: var(--accent-emerald); border: 1px solid rgba(16,185,129,0.3); border-radius: 12px; font-size: 11.5px; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> Auto-Synced & Active</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                        <div style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 10px 12px; border-radius: 8px;">
+                            <span style="font-size: 11px; color: var(--text-muted); display: block;">Last Backup Time:</span>
+                            <h5 id="cloudDashboardLastSync" style="font-size: 13px; font-weight: 700; color: var(--text-primary); margin-top: 2px;">Today at 11:53 PM</h5>
+                        </div>
+                        <div style="background: var(--bg-sidebar); border: 1px solid var(--border-color); padding: 10px 12px; border-radius: 8px;">
+                            <span style="font-size: 11px; color: var(--text-muted); display: block;">Synced Notes & Size:</span>
+                            <h5 id="cloudDashboardNotesSize" style="font-size: 13px; font-weight: 700; color: var(--accent-sky); margin-top: 2px;">0 Notes (0 KB)</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                    <label style="font-size: 13px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                        <span><i class="fa-brands fa-google-drive" style="color: var(--accent-sky);"></i> Connected Google Storage Account:</span>
+                        <span id="cloudAccountStatusBadge" style="display: none; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: rgba(16, 185, 129, 0.12); color: var(--accent-emerald); border: 1px solid rgba(16,185,129,0.3);"><i class="fa-solid fa-circle-check"></i> Connected</span>
+                    </label>
+                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                        <input type="email" id="cloudAccountEmailInput" placeholder="your-name@gmail.com" class="datetime-picker-input" style="text-align: left; flex: 1;">
+                        <button class="btn btn-secondary" id="saveCloudAccountBtn" title="Connect Google Account"><i class="fa-solid fa-link"></i> Connect Account</button>
+                    </div>
+                    <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 6px;">Enter any custom Gmail to route 5TB cloud backups & email notifications.</span>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn btn-primary btn-block" id="modalCloudSyncBtn"><i class="fa-solid fa-cloud-arrow-up"></i> Sync & Backup Notes Now</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" id="downloadFullPdfBtn" style="flex: 1;"><i class="fa-solid fa-file-pdf" style="color: var(--accent-rose);"></i> Export Workspace PDF Bundle</button>
+                        <button class="btn btn-secondary" id="downloadJsonBackupBtn" style="flex: 1;"><i class="fa-solid fa-download"></i> Download JSON Backup</button>
+                    </div>
+                    <div style="border-top: 1px dashed var(--border-color); padding-top: 12px; margin-top: 4px;">
+                        <button class="btn btn-secondary btn-block" id="triggerRestoreBrowseBtn"><i class="fa-solid fa-clock-rotate-left" style="color: var(--accent-emerald);"></i> Restore Notes from Backup File (.json)</button>
+                        <input type="file" id="restoreFileInput" accept=".json" style="display: none;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🧠 MIND MAP GRAPH VIEW MODAL -->
+    <div class="modal-backdrop" id="graphModal" style="display: none;">
+        <div class="modal-content" style="max-width: 960px; height: 88vh; display: flex; flex-direction: column;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-brain glowing-ai" style="color: var(--accent-indigo);"></i>
+                    <h3>Interactive Mind Map & Note Network</h3>
+                </div>
+                <button class="modal-close-btn" id="closeGraphModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 16px; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                <div class="graph-toolbar" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; font-size: 12px; color: var(--text-secondary); background: var(--bg-main); padding: 8px 14px; border-radius: 10px; border: 1px solid var(--border-color);">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <span><i class="fa-solid fa-circle" style="color: #0ea5e9;"></i> Notes</span>
+                        <span><i class="fa-solid fa-folder" style="color: #f59e0b;"></i> Categories</span>
+                        <span><i class="fa-solid fa-link" style="color: #6366f1;"></i> Connections</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <button class="btn btn-secondary" id="mindMapResetBtn" style="padding: 4px 10px; font-size: 11.5px;" title="Reset View & Center Network"><i class="fa-solid fa-arrows-to-dot"></i> Recenter</button>
+                        <span style="font-size: 11px; opacity: 0.7;">💡 Click & Drag nodes | Click node to open note</span>
+                    </div>
+                </div>
+                <div class="mindmap-canvas-container" id="mindmapCanvasContainer" style="flex: 1; min-height: 480px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-main); position: relative; overflow: hidden;">
+                    <canvas id="mindMapCanvas" style="width: 100%; height: 100%; display: block; cursor: grab;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📋 KANBAN TASK BOARD MODAL -->
+    <div class="modal-backdrop" id="kanbanModal" style="display: none;">
+        <div class="modal-content" style="max-width: 1000px; height: 90vh; display: flex; flex-direction: column;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-table-columns glowing-ai" style="color: var(--accent-emerald);"></i>
+                    <div>
+                        <h3>Smart Kanban Task Board</h3>
+                        <span class="sub-text" style="font-size: 11.5px; color: var(--text-muted);">Drag & Drop notes between columns or use 1-click status pills</span>
+                    </div>
+                </div>
+                <button class="modal-close-btn" id="closeKanbanModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 16px; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                <!-- KANBAN CONTROL TOOLBAR & PROGRESS -->
+                <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 240px; display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 12px; font-weight: 700; color: var(--text-secondary); white-space: nowrap;">Project Progress:</span>
+                        <div style="flex: 1; height: 10px; border-radius: 10px; background: var(--border-color); overflow: hidden; position: relative;">
+                            <div id="kanbanProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-emerald), var(--accent-sky)); transition: width 0.4s ease;"></div>
+                        </div>
+                        <span id="kanbanProgressText" style="font-size: 12px; font-weight: 800; color: var(--accent-emerald); white-space: nowrap;">0%</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="text" id="kanbanSearchInput" placeholder="Filter tasks..." style="padding: 6px 12px; border-radius: 14px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 12px; outline: none; width: 180px;">
+                        <button class="btn btn-primary" id="kanbanCreateTaskBtn" style="padding: 6px 14px; font-size: 12px;"><i class="fa-solid fa-plus"></i> New Task Note</button>
+                    </div>
+                </div>
+
+                <!-- KANBAN COLUMNS GRID -->
+                <div class="kanban-board-grid" style="flex: 1; min-height: 0;">
+                    <div class="kanban-column" data-status="todo">
+                        <div class="kanban-column-header todo" style="display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fa-solid fa-list-check"></i> To-Do</span>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span class="kanban-count-badge" id="countKanbanTodo">0</span>
+                                <button class="btn-icon kanban-add-task-btn" data-status="todo" title="Add To-Do Task" style="width: 24px; height: 24px; font-size: 11px;"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                        <div class="kanban-cards-dropzone" id="kanbanZoneTodo"></div>
+                    </div>
+
+                    <div class="kanban-column" data-status="in-progress">
+                        <div class="kanban-column-header progress" style="display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fa-solid fa-spinner fa-spin"></i> In Progress</span>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span class="kanban-count-badge" id="countKanbanProgress">0</span>
+                                <button class="btn-icon kanban-add-task-btn" data-status="in-progress" title="Add In-Progress Task" style="width: 24px; height: 24px; font-size: 11px;"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                        <div class="kanban-cards-dropzone" id="kanbanZoneProgress"></div>
+                    </div>
+
+                    <div class="kanban-column" data-status="completed">
+                        <div class="kanban-column-header done" style="display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fa-solid fa-circle-check"></i> Completed</span>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span class="kanban-count-badge" id="countKanbanDone">0</span>
+                                <button class="btn-icon kanban-add-task-btn" data-status="completed" title="Add Completed Task" style="width: 24px; height: 24px; font-size: 11px;"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                        <div class="kanban-cards-dropzone" id="kanbanZoneDone"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎙️ REAL-TIME AUDIO RECORDER & AI TRANSCRIBER MODAL -->
+    <div class="modal-backdrop" id="audioRecorderModal" style="display: none;">
+        <div class="modal-content small-modal text-center">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-circle-dot glowing-ai" style="color: #f43f5e;"></i>
+                    <h3>Lecture / Meeting Audio Recorder</h3>
+                </div>
+                <button class="modal-close-btn" id="closeAudioRecorderModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="voice-wave-container">
+                    <div class="voice-mic-circle" id="audioMicCircle" style="background: rgba(244,63,94,0.15); color: #f43f5e;">
+                        <i class="fa-solid fa-microphone"></i>
+                    </div>
+                    <h4 id="audioTimerDisplay" style="font-family: 'Fira Code', monospace; font-size: 24px; margin-top: 10px; color: var(--text-primary);">00:00</h4>
+                    <p id="audioRecordStatusText" style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Click Record to start lecture/meeting recording...</p>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between;">
+                <button class="btn btn-secondary" id="toggleAudioRecordBtn"><i class="fa-solid fa-circle" style="color: #f43f5e;"></i> Start Recording</button>
+                <button class="btn btn-primary" id="insertAudioToNoteBtn" style="display: none;"><i class="fa-solid fa-plus"></i> Insert Player & AI Transcribe</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📎 PDF & DOCUMENT VIEWER MODAL -->
+    <div class="modal-backdrop" id="pdfViewerModal" style="display: none;">
+        <div class="modal-content" style="max-width: 850px; height: 85vh;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-file-pdf glowing-ai" style="color: var(--accent-rose);"></i>
+                    <h3 id="pdfModalTitle">PDF Document Reader</h3>
+                </div>
+                <button class="modal-close-btn" id="closePdfModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 0; height: 100%;">
+                <iframe id="pdfIframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔍 OCR TEXT EXTRACTOR MODAL -->
+    <div class="modal-backdrop" id="ocrModal" style="display: none;">
+        <div class="modal-content small-modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-eye glowing-ai"></i>
+                    <h3>OCR Image Text Extractor</h3>
+                </div>
+                <button class="modal-close-btn" id="closeOcrModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">Choose a document or handwritten photo to extract text automatically:</p>
+                <button class="btn btn-primary btn-block" id="triggerOcrBrowseBtn">
+                    <i class="fa-solid fa-folder-open"></i> Browse Image File...
+                </button>
+                <div id="ocrResultBox" style="display: none; margin-top: 14px;">
+                    <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">Extracted Text:</label>
+                    <textarea id="ocrExtractedTextarea" style="width: 100%; height: 120px; padding: 10px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; color: var(--text-primary); outline: none;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelOcrBtn">Cancel</button>
+                <button class="btn btn-primary" id="appendOcrTextBtn" style="display: none;"><i class="fa-solid fa-plus"></i> Append to Note</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔑 AUTHENTICATION & SYSTEM WELCOME SHOWCASE MODAL -->
+    <div class="modal-backdrop" id="authModal" style="display: flex;">
+        <div class="modal-content" style="max-width: 880px; padding: 0; overflow: hidden; border-radius: 20px; box-shadow: 0 30px 80px rgba(0,0,0,0.5);">
+            <div style="display: flex; min-height: 520px; flex-wrap: wrap;">
+                
+                <!-- LEFT COLUMN: SYSTEM OVERVIEW & TEAM NOCTRAX BRANDING (42% Width) -->
+                <div style="flex: 1.2; min-width: 320px; background: linear-gradient(135deg, rgba(14, 165, 233, 0.22), rgba(99, 102, 241, 0.22)), var(--bg-sidebar); border-right: 1px solid var(--border-color); padding: 32px 26px; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+                    <div>
+                        <!-- Logo & Version -->
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                            <img src="{{ url_for('static', filename='images/app_logo.png') }}" style="width: 44px; height: 44px; border-radius: 12px; box-shadow: 0 4px 14px var(--accent-sky-glow);">
+                            <div>
+                                <h2 style="font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 800; color: var(--text-primary); margin: 0;">Note<span style="color: var(--accent-sky);">Z</span> PRO</h2>
+                                <span style="font-size: 11px; color: var(--accent-sky); font-weight: 700;">Workspace Version 2.0</span>
+                            </div>
+                        </div>
+
+                        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 22px;">
+                            Next-generation AI desktop note workspace with real-time visual canvas editing, interactive mind maps, and end-to-end cloud encryption.
+                        </p>
+
+                        <!-- System Highlights Pills -->
+                        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;">
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; background: var(--bg-main); border: 1px solid var(--border-color); font-size: 12px; font-weight: 600;">
+                                <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent-sky);"></i>
+                                <span>AI Insights & Gemini Pro Chatbot</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; background: var(--bg-main); border: 1px solid var(--border-color); font-size: 12px; font-weight: 600;">
+                                <i class="fa-solid fa-brain" style="color: var(--accent-indigo);"></i>
+                                <span>Mind Map Graph & Task Kanban</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; background: var(--bg-main); border: 1px solid var(--border-color); font-size: 12px; font-weight: 600;">
+                                <i class="fa-solid fa-shield-halved" style="color: var(--accent-emerald);"></i>
+                                <span>AES-256 Tunnel & 5TB Cloud Backup</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Team NoCtraX Cybernetic Eagle Footer Box -->
+                    <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px;">
+                        <img src="{{ url_for('static', filename='images/team_noctrax_logo.jpg') }}" alt="Team NoCtraX Logo" style="width: 42px; height: 42px; border-radius: 10px; object-fit: cover; border: 1.5px solid var(--accent-sky); box-shadow: 0 4px 12px var(--accent-sky-glow);">
+                        <div>
+                            <strong style="font-size: 12px; display: block; color: var(--text-primary);">Engineered By Team NoCtraX</strong>
+                            <span style="font-size: 10.5px; color: var(--accent-sky); font-weight: 600;">Cybersecurity | Technology</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: INTERACTIVE TABS (LOGIN, SYSTEM DETAILS, TEAM DETAILS) (58% Width) -->
+                <div style="flex: 1.5; min-width: 340px; padding: 28px 24px; display: flex; flex-direction: column; justify-content: space-between; background: var(--bg-card);">
+                    
+                    <!-- Top Segmented Navigation Tabs -->
+                    <div>
+                        <div class="image-modal-tabs" style="margin-bottom: 20px; display: flex; gap: 4px; background: var(--bg-main); padding: 4px; border-radius: 12px; border: 1px solid var(--border-color);">
+                            <button class="tab-btn active" id="authTabLogin" style="flex: 1; font-size: 11px; font-weight: 700; padding: 7px 4px;"><i class="fa-solid fa-right-to-bracket"></i> Sign In</button>
+                            <button class="tab-btn" id="authTabRegister" style="flex: 1; font-size: 11px; font-weight: 700; padding: 7px 4px;"><i class="fa-solid fa-user-plus"></i> Register</button>
+                            <button class="tab-btn" id="authTabSystemInfo" style="flex: 1; font-size: 11px; font-weight: 700; padding: 7px 4px;"><i class="fa-solid fa-layer-group"></i> System Info</button>
+                            <button class="tab-btn" id="authTabTeamInfo" style="flex: 1; font-size: 11px; font-weight: 700; padding: 7px 4px;"><i class="fa-solid fa-shield-cat"></i> Team NoCtraX</button>
+                        </div>
+
+                        <!-- SECTION 1: LOG IN / CREATE ACCOUNT FORM -->
+                        <div id="authSectionForm">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                                <h3 id="authFormTitle" style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-primary);">Welcome Back</h3>
+                                <span id="toggleRegisterLink" style="font-size: 11.5px; color: var(--accent-sky); font-weight: 700; cursor: pointer;">Create New Account</span>
+                            </div>
+
+                            <div id="loginFormSection">
+                                <div class="form-group">
+                                    <label style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary);">Email Address:</label>
+                                    <input type="email" id="loginEmail" placeholder="user@domain.com" class="datetime-picker-input" style="text-align: left; padding: 10px;">
+                                </div>
+                                <div class="form-group" style="margin-top: 12px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                        <label style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary);">Password:</label>
+                                        <span id="openForgotPassLink" style="font-size: 11px; color: var(--accent-sky); font-weight: 600; cursor: pointer;"><i class="fa-solid fa-key" style="font-size: 10px;"></i> Forgot Password?</span>
+                                    </div>
+                                    <div style="position: relative;">
+                                        <input type="password" id="loginPassword" placeholder="••••••••" class="datetime-picker-input" style="text-align: left; padding: 10px 36px 10px 10px; width: 100%;">
+                                        <button type="button" class="toggle-password-eye-btn" data-target="loginPassword" title="Show/Hide Password" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px;">
+                                            <i class="fa-solid fa-eye-slash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary btn-block" id="submitLoginBtn" style="margin-top: 18px; padding: 11px; font-weight: 700; font-size: 13px;">
+                                    <i class="fa-solid fa-right-to-bracket"></i> Log In to Workspace
+                                </button>
+                                <div style="margin-top: 12px; padding: 8px 10px; border-radius: 8px; background: var(--bg-main); border: 1px dashed var(--accent-sky); display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                    <span style="font-size: 11px; color: var(--text-muted);"><i class="fa-solid fa-user-check" style="color: var(--accent-sky);"></i> Demo Account Log In</span>
+                                    <button class="btn btn-secondary" id="fillDemoLoginBtn" style="padding: 3px 8px; font-size: 10.5px; border-radius: 6px;"><i class="fa-solid fa-bolt" style="color: var(--accent-sky);"></i> 1-Click Demo Fill</button>
+                                </div>
+                            </div>
+
+                            <div id="registerFormSection" style="display: none;">
+                                <div class="form-group">
+                                    <label style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary);">Full Name / Display Name:</label>
+                                    <input type="text" id="regName" placeholder="Enter full name" class="datetime-picker-input" style="text-align: left; padding: 10px;">
+                                </div>
+                                <div class="form-group" style="margin-top: 10px;">
+                                    <label style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary);">Email Address:</label>
+                                    <input type="email" id="regEmail" placeholder="user@domain.com" class="datetime-picker-input" style="text-align: left; padding: 10px;">
+                                </div>
+                                <div class="form-group" style="margin-top: 10px;">
+                                    <label style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary);">Password:</label>
+                                    <div style="position: relative;">
+                                        <input type="password" id="regPassword" placeholder="••••••••" class="datetime-picker-input" style="text-align: left; padding: 10px 36px 10px 10px; width: 100%;">
+                                        <button type="button" class="toggle-password-eye-btn" data-target="regPassword" title="Show/Hide Password" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px;">
+                                            <i class="fa-solid fa-eye-slash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary btn-block" id="submitRegisterBtn" style="margin-top: 18px; padding: 11px; font-weight: 700; font-size: 13px;">
+                                    <i class="fa-solid fa-user-plus"></i> Register New Account
+                                </button>
+                            </div>
+
+                            <div id="resetPasswordSection" style="display: none;">
+                                <div style="margin-bottom: 12px;">
+                                    <h4 style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">Reset Account Password</h4>
+                                    <span style="font-size: 11px; color: var(--text-muted);">Enter your registered email and choose a new password</span>
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary);">Registered Email Address:</label>
+                                    <input type="email" id="resetEmail" placeholder="user@domain.com" class="datetime-picker-input" style="text-align: left; padding: 10px;">
+                                </div>
+                                <div class="form-group" style="margin-top: 10px;">
+                                    <label style="font-size: 11.5px; font-weight: 700; color: var(--text-secondary);">New Password:</label>
+                                    <div style="position: relative;">
+                                        <input type="password" id="resetNewPassword" placeholder="Enter new password" class="datetime-picker-input" style="text-align: left; padding: 10px 36px 10px 10px; width: 100%;">
+                                        <button type="button" class="toggle-password-eye-btn" data-target="resetNewPassword" title="Show/Hide Password" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px;">
+                                            <i class="fa-solid fa-eye-slash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary btn-block" id="submitResetPassBtn" style="margin-top: 16px; padding: 10px; font-weight: 700; font-size: 12.5px;">
+                                    <i class="fa-solid fa-key"></i> Update Password & Sign In
+                                </button>
+                                <button class="btn btn-secondary btn-block" id="cancelResetPassBtn" style="margin-top: 8px; padding: 8px; font-size: 11.5px;">
+                                    Cancel / Back to Sign In
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 2: SYSTEM DETAILS SHOWCASE -->
+                        <div id="authSectionSystemInfo" style="display: none;">
+                            <h3 style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">NoteZ v2.0 Architecture & Features</h3>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px;">
+                                <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px;">
+                                    <strong style="font-size: 12px; color: var(--accent-sky); display: block;"><i class="fa-solid fa-pen-to-square"></i> Visual Canvas</strong>
+                                    <span style="font-size: 11px; color: var(--text-muted);">Real-time WYSIWYG note editing with images & code blocks.</span>
+                                </div>
+                                <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px;">
+                                    <strong style="font-size: 12px; color: var(--accent-indigo); display: block;"><i class="fa-solid fa-layer-group"></i> 3D Flashcards</strong>
+                                    <span style="font-size: 11px; color: var(--text-muted);">Interactive flip flashcards deck for study revision.</span>
+                                </div>
+                                <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px;">
+                                    <strong style="font-size: 12px; color: var(--accent-emerald); display: block;"><i class="fa-solid fa-eye"></i> OCR Scanner</strong>
+                                    <span style="font-size: 11px; color: var(--text-muted);">Extract text automatically from uploaded photos & docs.</span>
+                                </div>
+                                <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px;">
+                                    <strong style="font-size: 12px; color: #f43f5e; display: block;"><i class="fa-solid fa-feather-pointed"></i> QuillBot AI</strong>
+                                    <span style="font-size: 11px; color: var(--text-muted);">1-Click paraphraser, grammar checker & summarizer.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 3: TEAM NOCTRAX SHOWCASE -->
+                        <div id="authSectionTeamInfo" style="display: none; text-align: center;">
+                            <img src="{{ url_for('static', filename='images/team_noctrax_logo.jpg') }}" alt="Team NoCtraX Logo" style="width: 58px; height: 58px; border-radius: 14px; object-fit: cover; border: 2px solid var(--accent-sky); box-shadow: 0 6px 20px var(--accent-sky-glow); margin-bottom: 8px;">
+                            <h3 style="font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 800; color: var(--text-primary); margin-bottom: 2px;">Team NoCtraX</h3>
+                            <span style="font-size: 11px; color: var(--accent-sky); font-weight: 700; display: block; margin-bottom: 8px;">Cybersecurity | Technology | Business</span>
+                            <p style="font-size: 11.5px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 10px;">
+                                Engineered by Team NoCtraX, NoteZ v2.0 brings military-grade encryption, seamless local SQLite storage, and Gemini Pro AI to desktop note-taking.
+                            </p>
+
+                            <!-- OFFICIAL TEAM NOCTRAX HIGHLIGHTS BADGE -->
+                            <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 12px; text-align: left;">
+                                <div style="font-size: 10.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-shield-halved" style="color: var(--accent-sky);"></i> Core Engineering & Security Standards
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 6px;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; color: var(--text-primary); font-size: 11.5px; font-weight: 600; padding: 6px 10px; border-radius: 8px; background: rgba(34, 197, 94, 0.12); border: 1px solid rgba(34, 197, 94, 0.3);">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <i class="fa-solid fa-lock" style="font-size: 13px; color: #22c55e;"></i>
+                                            <span>Privacy Architecture</span>
+                                        </div>
+                                        <strong style="color: #22c55e;">Zero-Knowledge Local DB</strong>
+                                    </div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; color: var(--text-primary); font-size: 11.5px; font-weight: 600; padding: 6px 10px; border-radius: 8px; background: var(--accent-sky-bg); border: 1px solid rgba(14, 165, 233, 0.3);">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <i class="fa-solid fa-microchip" style="font-size: 13px; color: var(--accent-sky);"></i>
+                                            <span>AI Engine</span>
+                                        </div>
+                                        <strong style="color: var(--accent-sky);">Offline NLP + Gemini API</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer Info -->
+                    <div style="font-size: 11px; color: var(--text-muted); text-align: center; border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 10px;">
+                        Crafted with ❤️ by <strong>Team NoCtraX</strong> | All Rights Reserved © 2026
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⚙️ SETTINGS & PROFILE CUSTOMIZATION MODAL -->
+    <div class="modal-backdrop" id="settingsModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-sliders glowing-ai"></i>
+                    <h3>System Settings & Profile Customization</h3>
+                </div>
+                <button class="modal-close-btn" id="closeSettingsModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="image-modal-tabs" style="margin-bottom: 16px;">
+                    <button class="tab-btn active" id="tabSetProfile"><i class="fa-solid fa-user-gear"></i> Profile</button>
+                    <button class="tab-btn" id="tabSetCloud"><i class="fa-solid fa-cloud-arrow-up"></i> Cloud Backup (5TB)</button>
+                    <button class="tab-btn" id="tabSetSecurity"><i class="fa-solid fa-shield-halved"></i> Security</button>
+                </div>
+
+                <div id="setProfileSection">
+                    <div class="form-group">
+                        <label>Display Name:</label>
+                        <input type="text" id="setDisplayName" class="datetime-picker-input" style="text-align: left;">
+                    </div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label>Email Address:</label>
+                        <input type="email" id="setEmail" class="datetime-picker-input" style="text-align: left;">
+                    </div>
+
+                    <div class="form-group" style="margin-top: 12px; background: var(--accent-sky-bg); padding: 12px; border-radius: 8px; border: 1px solid rgba(14,165,233,0.3);">
+                        <label><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent-sky);"></i> Google Gemini AI API Key (Optional):</label>
+                        <input type="password" id="setGeminiApiKey" placeholder="AIzaSy..." class="datetime-picker-input" style="text-align: left; margin-top: 4px;">
+                        <span style="font-size: 11px; color: var(--text-secondary); display: block; margin-top: 4px;">Enter Gemini API key to enable direct Gemini Pro AI Summaries.</span>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 14px; background: var(--bg-main); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <label><i class="fa-solid fa-image"></i> Custom Profile Photo (Computer Gallery):</label>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                            <div class="avatar-preview-box" id="avatarPreviewBox">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <button class="btn btn-secondary" id="triggerCustomAvatarBrowseBtn">
+                                <i class="fa-solid fa-folder-open"></i> Choose Photo...
+                            </button>
+                            <input type="file" id="customAvatarFileInput" accept="image/*" style="display: none;">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 12px;">
+                        <label>Or Choose Avatar Icon:</label>
+                        <div class="avatar-options">
+                            <button class="avatar-dot active" data-avatar="avatar1"><i class="fa-solid fa-user-astronaut"></i></button>
+                            <button class="avatar-dot" data-avatar="avatar2"><i class="fa-solid fa-user-ninja"></i></button>
+                            <button class="avatar-dot" data-avatar="avatar3"><i class="fa-solid fa-user-graduate"></i></button>
+                            <button class="avatar-dot" data-avatar="avatar4"><i class="fa-solid fa-user-tie"></i></button>
+                            <button class="avatar-dot" data-avatar="avatar5"><i class="fa-solid fa-user-gear"></i></button>
+                            <button class="avatar-dot" data-avatar="avatar6"><i class="fa-solid fa-user-shield"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 12px;">
+                        <label>Change Password (optional):</label>
+                        <input type="password" id="setNewPassword" placeholder="Leave empty to keep current password" class="datetime-picker-input" style="text-align: left;">
+                    </div>
+                    <button class="btn btn-primary" id="saveProfileSettingsBtn" style="margin-top: 16px;">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Profile Settings
+                    </button>
+                </div>
+
+                <div id="setCloudSection" style="display: none;">
+                    <div class="cloud-status-card">
+                        <i class="fa-brands fa-google-drive cloud-icon"></i>
+                        <div>
+                            <h4>5TB Google Drive Storage Account Linked</h4>
+                            <span style="font-size: 12px; color: var(--accent-emerald); font-weight: 600;">Status: 5TB Cloud Active & Auto-Synced</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 14px;">
+                        <label>Gmail / 5TB Google Drive Email Address:</label>
+                        <input type="email" id="setGdriveEmail" placeholder="your-email@gmail.com" class="datetime-picker-input" style="text-align: left;">
+                    </div>
+
+                    <div class="cloud-sync-info-box" id="cloudSyncInfoBox" style="display: flex; margin-top: 12px;">
+                        <i class="fa-solid fa-circle-check" style="color: var(--accent-emerald);"></i>
+                        <span id="cloudSyncText">5TB Google Drive Linked (user@example.com)</span>
+                    </div>
+
+                    <button class="btn btn-primary btn-block" id="triggerCloudSyncNowBtn" style="margin-top: 16px;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Sync & Backup Notes to 5TB Google Drive Now
+                    </button>
+                </div>
+
+                <div id="setSecuritySection" style="display: none;">
+                    <div class="stat-card" style="margin-bottom: 14px;">
+                        <div class="stat-icon sky"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div class="stat-data">
+                            <h4>AES-256 Encrypted Tunnel</h4>
+                            <span>Status: Active & Protected</span>
+                        </div>
+                    </div>
+                    <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;">
+                        Your Smart Notes AI application utilizes end-to-end AES-256 local database encryption and local loopback tunneling. All user data, notes, and credentials stay isolated on your laptop and encrypted in cloud transit.
+                    </p>
+                    <button class="btn btn-secondary btn-block" id="logoutBtn" style="margin-top: 20px;">
+                        <i class="fa-solid fa-right-from-bracket"></i> Log Out of Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🖼️ IMAGE INSERT MODAL -->
+    <div class="modal-backdrop" id="imageModal" style="display: none;">
+        <div class="modal-content small-modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-image glowing-ai"></i>
+                    <h3>Insert Image</h3>
+                </div>
+                <button class="modal-close-btn" id="closeImageModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="image-modal-tabs">
+                    <button class="tab-btn active" id="tabUploadFile">Upload from Computer</button>
+                    <button class="tab-btn" id="tabImageUrl">Paste Image URL</button>
+                </div>
+                <div id="uploadFileSection" style="margin-top: 14px;">
+                    <button class="btn btn-primary btn-block" id="triggerFileBrowseBtn">
+                        <i class="fa-solid fa-folder-open"></i> Choose Image File...
+                    </button>
+                </div>
+                <div id="imageUrlSection" style="display: none; margin-top: 14px;">
+                    <input type="text" id="imageUrlInput" placeholder="https://example.com/image.jpg" class="datetime-picker-input" style="text-align: left;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelImageModalBtn">Cancel</button>
+                <button class="btn btn-primary" id="confirmImageUrlBtn" style="display: none;">Insert Image Link</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎙️ VOICE TYPING MODAL -->
+    <div class="modal-backdrop" id="voiceModal" style="display: none;">
+        <div class="modal-content small-modal text-center">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-microphone glowing-ai"></i>
+                    <h3>Voice Dictation</h3>
+                </div>
+                <button class="modal-close-btn" id="closeVoiceModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="voice-wave-container">
+                    <div class="voice-mic-circle" id="voiceMicCircle">
+                        <i class="fa-solid fa-microphone"></i>
+                    </div>
+                    <p id="voiceStatusText" style="margin-top: 12px; font-weight: 600; color: var(--accent-sky);">Click Start to Dictate...</p>
+                    <div class="speech-box" id="speechBoxText" placeholder="Spoken words will appear here..."></div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between;">
+                <button class="btn btn-secondary" id="toggleSpeechRecBtn"><i class="fa-solid fa-play"></i> Start Dictation</button>
+                <button class="btn btn-primary" id="appendSpeechToNoteBtn"><i class="fa-solid fa-plus"></i> Add to Note</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔐 PIN LOCK MODAL -->
+    <div class="modal-backdrop" id="pinModal" style="display: none;">
+        <div class="modal-content small-modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-shield-halved glowing-ai"></i>
+                    <h3 id="pinModalTitle">Security PIN</h3>
+                </div>
+                <button class="modal-close-btn" id="closePinModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p id="pinModalSub" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 14px;">Enter 4-digit PIN to lock or unlock this note:</p>
+                <div class="pin-input-group">
+                    <input type="password" id="pinInput" maxlength="6" placeholder="****" autocomplete="off">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelPinBtn">Cancel</button>
+                <button class="btn btn-primary" id="submitPinBtn">Confirm PIN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📅 REMINDER / DUE DATE MODAL -->
+    <div class="modal-backdrop" id="reminderModal" style="display: none;">
+        <div class="modal-content small-modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-calendar-check glowing-ai"></i>
+                    <h3>Set Note Reminder / Due Date</h3>
+                </div>
+                <button class="modal-close-btn" id="closeReminderModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <label style="font-size: 13px; color: var(--text-secondary); display: block; margin-bottom: 8px;">Select Due Date & Time:</label>
+                <input type="datetime-local" id="reminderDateTimeInput" class="datetime-picker-input">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="clearReminderBtn">Clear Date</button>
+                <button class="btn btn-primary" id="saveReminderBtn">Save Reminder</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI SUMMARY MODAL WITH GEMINI PRO WEB 1-CLICK LAUNCH & PASTE IMPORT -->
+    <div class="modal-backdrop" id="aiModal" style="display: none;">
+        <div class="modal-content ai-modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-wand-magic-sparkles glowing-ai"></i>
+                    <div>
+                        <h3>AI Insights & Summary</h3>
+                        <span class="sub-text" id="aiModeBadge">Engine: Google Gemini Pro AI</span>
+                    </div>
+                </div>
+                <button class="modal-close-btn" id="closeAiModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="gemini-pro-banner" style="margin-bottom: 16px; background: linear-gradient(135deg, rgba(14,165,233,0.15), rgba(99,102,241,0.15)); border: 1px solid rgba(14,165,233,0.4); padding: 12px 16px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <h4 style="font-size: 13.5px; color: var(--accent-sky); font-weight: 700;"><i class="fa-brands fa-google"></i> Open in Google Gemini Pro Web</h4>
+                        <span style="font-size: 11.5px; color: var(--text-secondary);">Copy note text and open gemini.google.com with your Pro Gmail Account.</span>
+                    </div>
+                    <button class="btn btn-ai-sparkle" id="openGeminiWebBtn">
+                        <i class="fa-solid fa-up-right-from-square"></i> Open Gemini Pro
+                    </button>
+                </div>
+
+                <div class="ai-loader" id="aiLoader" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Analyzing Note Content & Extracting Key Insights...</p>
+                </div>
+                <div class="ai-results" id="aiResults">
+                    <div class="ai-section-card">
+                        <h4><i class="fa-solid fa-align-left"></i> Executive Summary</h4>
+                        <div class="ai-summary-box" id="aiSummaryText"></div>
+                    </div>
+                    <div class="ai-section-card">
+                        <h4><i class="fa-solid fa-list-check"></i> Key Action Points</h4>
+                        <ul class="ai-keypoints-list" id="aiKeypointsList"></ul>
+                    </div>
+                    <div class="ai-section-card">
+                        <h4><i class="fa-solid fa-hashtag"></i> Suggested Tags & Analytics</h4>
+                        <div class="ai-tags-container" id="aiTagsContainer" style="margin-bottom: 10px;"></div>
+                        <div class="ai-stats-row">
+                            <div class="ai-stat-chip"><i class="fa-solid fa-clock" style="color: var(--accent-sky);"></i> <span id="aiReadingTime">1 min read</span></div>
+                            <div class="ai-stat-chip"><i class="fa-solid fa-font" style="color: var(--accent-emerald);"></i> <span id="aiWordCount">0 Words</span></div>
+                        </div>
+                    </div>
+
+                    <div class="gemini-import-box" style="margin-top: 14px; border-top: 1px dashed var(--border-color); padding-top: 14px;">
+                        <h4 style="font-size: 13px; color: var(--text-primary); margin-bottom: 6px;"><i class="fa-solid fa-paste"></i> Paste Gemini Pro Web Response Below:</h4>
+                        <textarea id="geminiImportInput" placeholder="Paste full summary text from gemini.google.com here..." style="width: 100%; height: 70px; padding: 8px 12px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; font-size: 12.5px; outline: none; resize: none; color: var(--text-primary);"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between;">
+                <button class="btn btn-secondary" id="copyAiSummaryBtn"><i class="fa-solid fa-copy"></i> Copy Summary</button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary" id="applyAiTagsBtn"><i class="fa-solid fa-plus"></i> Apply Tags</button>
+                    <button class="btn btn-primary" id="saveAiSummaryAsNoteBtn"><i class="fa-solid fa-file-circle-plus"></i> Save as New Note</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎨 PDF COLOR CUSTOMIZATION MODAL -->
+    <div class="modal-backdrop" id="pdfColorModal" style="display: none;">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-palette glowing-ai"></i>
+                    <h3>Customize PDF Export Theme Color</h3>
+                </div>
+                <button class="modal-close-btn" id="closePdfColorModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                    Select your preferred accent color theme for the generated PDF document:
+                </p>
+                <div class="pdf-color-theme-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                    <div class="pdf-color-card active" data-color="sky" style="padding: 12px; border: 2px solid var(--accent-sky); border-radius: 10px; background: #f0f9ff; text-align: center; cursor: pointer;">
+                        <div style="width: 26px; height: 26px; border-radius: 50%; background: #0ea5e9; margin: 0 auto 6px;"></div>
+                        <span style="font-size: 12px; font-weight: 700; color: #0369a1;">Sky Blue</span>
+                    </div>
+                    <div class="pdf-color-card" data-color="emerald" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; background: #ecfdf5; text-align: center; cursor: pointer;">
+                        <div style="width: 26px; height: 26px; border-radius: 50%; background: #10b981; margin: 0 auto 6px;"></div>
+                        <span style="font-size: 12px; font-weight: 700; color: #047857;">Emerald</span>
+                    </div>
+                    <div class="pdf-color-card" data-color="indigo" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; background: #eef2ff; text-align: center; cursor: pointer;">
+                        <div style="width: 26px; height: 26px; border-radius: 50%; background: #6366f1; margin: 0 auto 6px;"></div>
+                        <span style="font-size: 12px; font-weight: 700; color: #4338ca;">Indigo</span>
+                    </div>
+                    <div class="pdf-color-card" data-color="rose" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; background: #fff1f2; text-align: center; cursor: pointer;">
+                        <div style="width: 26px; height: 26px; border-radius: 50%; background: #f43f5e; margin: 0 auto 6px;"></div>
+                        <span style="font-size: 12px; font-weight: 700; color: #be123c;">Rose</span>
+                    </div>
+                    <div class="pdf-color-card" data-color="amber" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; background: #fffbeb; text-align: center; cursor: pointer;">
+                        <div style="width: 26px; height: 26px; border-radius: 50%; background: #d97706; margin: 0 auto 6px;"></div>
+                        <span style="font-size: 12px; font-weight: 700; color: #b45309;">Amber</span>
+                    </div>
+                    <div class="pdf-color-card" data-color="dark" style="padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; background: #0f172a; text-align: center; cursor: pointer;">
+                        <div style="width: 26px; height: 26px; border-radius: 50%; background: #38bdf8; margin: 0 auto 6px;"></div>
+                        <span style="font-size: 12px; font-weight: 700; color: #f8fafc;">Executive Dark</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelPdfColorBtn">Cancel</button>
+                <button class="btn btn-primary" id="confirmPdfExportBtn"><i class="fa-solid fa-file-pdf"></i> Generate PDF Document</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔥 7-DAY WRITING STREAK TRACKER MODAL -->
+    <div class="modal-backdrop" id="streakModal" style="display: none;">
+        <div class="modal-content" style="max-width: 540px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-fire fire-icon" style="color: #f97316;"></i>
+                    <h3>7-Day Writing Streak & Achievements</h3>
+                </div>
+                <button class="modal-close-btn" id="closeStreakModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 20px;">
+                <!-- DYNAMIC FLAME BANNER -->
+                <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(239, 68, 68, 0.2)); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2);">
+                    <div style="font-size: 28px; margin-bottom: 2px;">🔥 <span id="streakModalCountNum" style="font-size: 34px; font-weight: 800; color: #f59e0b;">2</span> Days Active Streak!</div>
+                    <p style="font-size: 12.5px; color: var(--text-secondary); margin: 0;">Keep writing or editing notes daily to maintain your active streak!</p>
+                </div>
+
+                <!-- LAST 7 DAYS VIBRANT GRID -->
+                <h4 style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; text-align: left;">Last 7 Days Activity</h4>
+                <div id="streak7DaysGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 18px;">
+                    <!-- Dynamically populated by JS -->
+                </div>
+
+                <!-- WEEKLY GOAL PROGRESS BAR -->
+                <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; text-align: left; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <div>
+                            <span style="font-size: 11px; color: var(--text-muted); display: block;">Weekly Milestone Goal</span>
+                            <strong id="streakWeeklyGoalText" style="font-size: 13.5px; color: var(--text-primary);">2 / 7 Days Active</strong>
+                        </div>
+                        <i class="fa-solid fa-trophy" style="font-size: 22px; color: #f59e0b;"></i>
+                    </div>
+                    <div style="height: 8px; border-radius: 8px; background: var(--border-color); overflow: hidden; position: relative;">
+                        <div id="streakProgressBar" style="height: 100%; width: 28%; background: linear-gradient(90deg, #f59e0b, #ef4444); transition: width 0.4s ease;"></div>
+                    </div>
+                </div>
+
+                <!-- 🏆 STREAK ACHIEVEMENTS & BADGES SHOWCASE -->
+                <h4 style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; text-align: left;">🏆 Writing Badges & Trophies</h4>
+                <div id="streakBadgesContainer" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <!-- Badge 1: 3 Days -->
+                    <div id="badge3Days" style="padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-main); text-align: center;">
+                        <div style="font-size: 24px; margin-bottom: 4px;">🥉</div>
+                        <strong style="font-size: 11.5px; display: block; color: var(--text-primary);">3-Day Streak</strong>
+                        <span class="badge-status-label" style="font-size: 10px; color: var(--text-muted);">Novice Writer</span>
+                    </div>
+
+                    <!-- Badge 2: 5 Days -->
+                    <div id="badge5Days" style="padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-main); text-align: center;">
+                        <div style="font-size: 24px; margin-bottom: 4px;">🥈</div>
+                        <strong style="font-size: 11.5px; display: block; color: var(--text-primary);">5-Day Streak</strong>
+                        <span class="badge-status-label" style="font-size: 10px; color: var(--text-muted);">Pro Note Master</span>
+                    </div>
+
+                    <!-- Badge 3: 7 Days -->
+                    <div id="badge7Days" style="padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-main); text-align: center;">
+                        <div style="font-size: 24px; margin-bottom: 4px;">🥇</div>
+                        <strong style="font-size: 11.5px; display: block; color: var(--text-primary);">7-Day Master</strong>
+                        <span class="badge-status-label" style="font-size: 10px; color: var(--text-muted);">Legendary Scholar</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button class="btn btn-primary" id="closeStreakModalFooterBtn" style="min-width: 140px; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; font-weight: 700;">Keep it Up! 🔥</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🛡️ AES-256 SECURITY & PRIVACY ENCRYPTION MODAL -->
+    <div class="modal-backdrop" id="securityModal" style="display: none;">
+        <div class="modal-content" style="max-width: 520px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-shield-halved" style="color: var(--accent-emerald);"></i>
+                    <h3>Security & AES-256 Encryption</h3>
+                </div>
+                <button class="modal-close-btn" id="closeSecurityModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(20, 184, 166, 0.15)); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 14px; margin-bottom: 20px;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: var(--accent-emerald); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
+                        <i class="fa-solid fa-lock"></i>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">End-to-End Encrypted Tunnel Active</h4>
+                        <span style="font-size: 12px; color: var(--accent-emerald); font-weight: 600;">Status: 100% Protected (AES-256 GCM)</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; display: flex; align-items: flex-start; gap: 12px;">
+                        <i class="fa-solid fa-database" style="color: var(--accent-sky); font-size: 18px; margin-top: 2px;"></i>
+                        <div>
+                            <h5 style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px;">256-Bit Local Storage Encryption</h5>
+                            <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">All SQLite database files, visual notes, and uploaded image attachments are stored locally on your PC with 256-bit AES protection.</p>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; display: flex; align-items: flex-start; gap: 12px;">
+                        <i class="fa-solid fa-user-shield" style="color: var(--accent-emerald); font-size: 18px; margin-top: 2px;"></i>
+                        <div>
+                            <h5 style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px;">Zero-Knowledge Privacy Architecture</h5>
+                            <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">Your private notes are never transmitted to third-party telemetry servers. You hold full ownership of your data.</p>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; display: flex; align-items: flex-start; gap: 12px;">
+                        <i class="fa-solid fa-key" style="color: var(--accent-amber); font-size: 18px; margin-top: 2px;"></i>
+                        <div>
+                            <h5 style="font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px;">PIN Lock Protection Vault</h5>
+                            <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">Individual notes can be locked with custom PIN passwords, preventing unauthorized access even when workspace is open.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button class="btn btn-primary" id="closeSecurityModalFooterBtn" style="min-width: 140px;">Got It!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🪶 QUILLBOT AI PREMIUM INTEGRATION MODAL -->
+    <div class="modal-backdrop" id="quillbotModal" style="display: none;">
+        <div class="modal-content" style="max-width: 560px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-feather-pointed" style="color: #22c55e; font-size: 22px;"></i>
+                    <div>
+                        <h3>QuillBot AI Paraphraser & Grammar Tool</h3>
+                        <span class="sub-text" style="font-size: 11.5px; color: var(--text-muted);">Instant AI Paraphrasing, Grammar Checker & Summarizer</span>
+                    </div>
+                </div>
+                <button class="modal-close-btn" id="closeQuillbotModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 14px; padding: 16px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px;">
+                    <div>
+                        <h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">🪶 QuillBot AI Premium Access</h4>
+                        <span style="font-size: 12px; color: #22c55e; font-weight: 600;">Paraphrase, Rewrite & Fix Grammar in 1-Click</span>
+                    </div>
+                    <button class="btn btn-primary" id="openQuillbotWebBtn" style="background: linear-gradient(135deg, #22c55e, #16a34a); border: none; white-space: nowrap;">
+                        <i class="fa-solid fa-up-right-from-square"></i> Open QuillBot
+                    </button>
+                </div>
+
+                <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+                    <label style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Active Note Text for Paraphrasing:</label>
+                    <textarea id="quillbotTextPreview" style="width: 100%; height: 110px; background: var(--bg-sidebar); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 12.5px; padding: 10px; resize: vertical; outline: none;" placeholder="Note content will appear here..."></textarea>
+                    <button class="btn btn-secondary btn-block" id="copyQuillbotTextBtn" style="margin-top: 10px; font-size: 12px;">
+                        <i class="fa-solid fa-copy"></i> Copy Active Note Text to Clipboard
+                    </button>
+                </div>
+
+                <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.5;">
+                    💡 <strong>Tip:</strong> Click "Copy Active Note Text" above, then click "Open QuillBot" to paste and rewrite your text using QuillBot's AI Paraphraser modes!
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between;">
+                <button class="btn btn-secondary" id="closeQuillbotModalFooterBtn">Close</button>
+                <button class="btn btn-primary" id="openQuillbotDirectBtn" style="background: linear-gradient(135deg, #22c55e, #16a34a); border: none;"><i class="fa-solid fa-up-right-from-square"></i> Launch QuillBot Web</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🚀 ABOUT TEAM NOCTRAX & NOTEZ V2.0 MODAL -->
+    <div class="modal-backdrop" id="aboutTeamModal" style="display: none;">
+        <div class="modal-content" style="max-width: 540px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <img src="{{ url_for('static', filename='images/team_noctrax_logo.jpg') }}" alt="Team NoCtraX Logo" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--accent-sky); box-shadow: 0 2px 8px var(--accent-sky-glow);">
+                    <h3>About NoteZ & Team NoCtraX</h3>
+                </div>
+                <button class="modal-close-btn" id="closeAboutTeamModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 28px 24px;">
+                <!-- App Logo & Version Badge -->
+                <div style="width: 76px; height: 76px; border-radius: 20px; background: linear-gradient(135deg, var(--accent-sky), var(--accent-indigo)); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; box-shadow: 0 8px 24px var(--accent-sky-glow);">
+                    <h1 style="font-family: 'Outfit', sans-serif; font-size: 36px; font-weight: 800; color: #ffffff; margin: 0;">Note<span style="color: #fde047;">Z</span></h1>
+                </div>
+                <h2 style="font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Note<span style="color: var(--accent-sky);">Z</span> Workspace</h2>
+                <span style="padding: 4px 14px; background: var(--accent-sky-bg); color: var(--accent-sky); border: 1px solid rgba(14,165,233,0.3); border-radius: 14px; font-size: 12px; font-weight: 700; display: inline-block; margin-bottom: 18px;"><i class="fa-solid fa-rocket"></i> Version 2.0 (Build 2026.1)</span>
+
+                <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 22px;">
+                    NoteZ v2.0 is an advanced desktop workspace equipped with real-time visual canvas editing, AI insights, 3D revision flashcards, multi-language code execution, and 5TB cloud backup.
+                </p>
+
+                <!-- Team Mention Box -->
+                <div style="background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 14px; padding: 18px; text-align: left; margin-bottom: 18px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                        <img src="{{ url_for('static', filename='images/team_noctrax_logo.jpg') }}" alt="Team NoCtraX Logo" style="width: 46px; height: 46px; border-radius: 12px; object-fit: cover; border: 1.5px solid var(--accent-sky); box-shadow: 0 4px 14px var(--accent-sky-glow);">
+                        <div>
+                            <h4 style="font-size: 14.5px; font-weight: 700; color: var(--text-primary);">Developed & Engineered By</h4>
+                            <span style="font-size: 12.5px; color: var(--accent-sky); font-weight: 700;">Team NoCtraX</span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--text-primary);">
+                            <i class="fa-solid fa-user-gear" style="color: var(--accent-sky); width: 16px;"></i>
+                            <span><strong>Core Engineering:</strong> Systems Architecture & Desktop Integration</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--text-primary);">
+                            <i class="fa-solid fa-brain" style="color: var(--accent-indigo); width: 16px;"></i>
+                            <span><strong>AI & Intelligence:</strong> Built-in Offline NLP & Gemini Pro Integration</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--text-primary);">
+                            <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent-rose); width: 16px;"></i>
+                            <span><strong>UI/UX Design:</strong> Modern Glassmorphism & Custom Color Themes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="font-size: 11.5px; color: var(--text-muted);">
+                    Crafted with ❤️ by <strong>Team NoCtraX</strong> | All Rights Reserved © 2026
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button class="btn btn-primary" id="closeAboutTeamModalFooterBtn" style="min-width: 140px;"><i class="fa-solid fa-check"></i> Great!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SYSTEM STATISTICS MODAL WITH ACTIVITY LINE GRAPH -->
+    <div class="modal-backdrop" id="statsModal" style="display: none;">
+        <div class="modal-content stats-modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-chart-line glowing-ai"></i>
+                    <h3>Writing Productivity Analytics</h3>
+                </div>
+                <button class="modal-close-btn" id="closeStatsModalBtn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="stats-grid" style="margin-bottom: 20px;">
+                    <div class="stat-card">
+                        <div class="stat-icon sky"><i class="fa-solid fa-sticky-note"></i></div>
+                        <div class="stat-data"><h4 id="statTotalNotes">0</h4><span>Total Notes</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon amber"><i class="fa-solid fa-thumbtack"></i></div>
+                        <div class="stat-data"><h4 id="statPinnedNotes">0</h4><span>Pinned Notes</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon rose"><i class="fa-solid fa-star"></i></div>
+                        <div class="stat-data"><h4 id="statFavNotes">0</h4><span>Favorites</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon cyan"><i class="fa-solid fa-keyboard"></i></div>
+                        <div class="stat-data"><h4 id="statTotalWordsCount">0</h4><span>Total Words Written</span></div>
+                    </div>
+                </div>
+
+                <div class="chart-container-card">
+                    <h4><i class="fa-solid fa-chart-area"></i> 7-Day Writing Activity (Words Written)</h4>
+                    <div style="height: 220px; width: 100%; margin-top: 10px;">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎓 ACADEMIC SUBJECT MODULES & SEMESTER WORKSPACE MODAL -->
+    <div class="modal-backdrop" id="academicSubjectsModal" style="display: none;">
+        <div class="modal-content" style="max-width: 940px; width: 92%; max-height: 88vh; display: flex; flex-direction: column; padding: 24px; border-radius: 20px;">
+            <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 14px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-graduation-cap glowing-ai" style="font-size: 24px; color: var(--accent-indigo);"></i>
+                    <div>
+                        <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 0;">Academic Subject Modules & Semester Workspace</h3>
+                        <span style="font-size: 12px; color: var(--text-muted);">Organize notes, lectures, & photos by campus subjects</span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button class="btn btn-primary" id="openAddSubjectBtn" style="font-size: 12px; padding: 6px 14px; gap: 6px; background: linear-gradient(135deg, #6366f1, #4f46e5); border: none;">
+                        <i class="fa-solid fa-plus"></i> Add New Subject / Module
+                    </button>
+                    <button class="btn-icon" id="closeAcademicSubjectsModalBtn"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <!-- ADD NEW SUBJECT FORM CONTAINER (COLLAPSED BY DEFAULT) -->
+            <div id="addSubjectFormContainer" style="display: none; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px; margin-bottom: 16px;">
+                <h4 style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px;">➕ Create New Subject / Course Module</h4>
+                <div style="display: grid; grid-template-columns: 1fr 2fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" id="newSubjectCode" placeholder="Module Code (e.g. CS105)" style="padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 12px; outline: none;">
+                    <input type="text" id="newSubjectName" placeholder="Subject Name (e.g. Artificial Intelligence)" style="padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 12px; outline: none;">
+                    <select id="newSubjectSemester" style="padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 12px; outline: none;">
+                        <option value="Semester 1">Semester 1</option>
+                        <option value="Semester 2">Semester 2</option>
+                        <option value="Semester 3">Semester 3</option>
+                        <option value="Semester 4">Semester 4</option>
+                        <option value="Semester 5">Semester 5</option>
+                        <option value="Semester 6">Semester 6</option>
+                    </select>
+                    <select id="newSubjectColor" style="padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 12px; outline: none;">
+                        <option value="sky">Sky Blue</option>
+                        <option value="emerald">Emerald Green</option>
+                        <option value="indigo">Royal Purple</option>
+                        <option value="rose">Rose Pink</option>
+                        <option value="amber">Amber Gold</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="newSubjectDesc" placeholder="Description / Course Syllabus overview..." style="flex: 1; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-sidebar); color: var(--text-primary); font-size: 12px; outline: none;">
+                    <button class="btn btn-primary" id="saveSubjectModuleBtn" style="font-size: 12px; padding: 6px 16px; background: linear-gradient(135deg, #10b981, #059669); border: none;">Save Module</button>
+                    <button class="btn btn-secondary" id="cancelSubjectModuleBtn" style="font-size: 12px;">Cancel</button>
+                </div>
+            </div>
+
+            <!-- SUBJECT CARDS GRID -->
+            <div class="subjects-grid-container" id="subjectsGridContainer" style="flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; padding-right: 4px;">
+                <!-- Dynamic Subject Cards -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 🖼️ SMART PHOTO VAULT & MEDIA GALLERY MODAL -->
+    <div class="modal-backdrop" id="mediaGalleryModal" style="display: none;">
+        <div class="modal-content" style="max-width: 920px; width: 92%; max-height: 88vh; display: flex; flex-direction: column; padding: 24px; border-radius: 20px;">
+            <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 14px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-images glowing-ai" style="font-size: 22px; color: #f43f5e;"></i>
+                    <div>
+                        <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 0;">Photo Vault & Media Gallery</h3>
+                        <span style="font-size: 12px; color: var(--text-muted);">Manage all note images, screenshots, & uploaded media</span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button class="btn btn-primary" id="galleryUploadNewBtn" style="font-size: 12px; padding: 6px 14px; gap: 6px; background: linear-gradient(135deg, #f43f5e, #e11d48); border: none;">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Upload New Photo
+                    </button>
+                    <input type="file" id="galleryFileInput" accept="image/*" style="display: none;">
+                    <button class="btn-icon" id="closeMediaGalleryModalBtn"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px;">
+                <div style="position: relative; flex: 1;">
+                    <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 12px;"></i>
+                    <input type="text" id="gallerySearchInput" placeholder="Search photos by filename or note title..." style="width: 100%; padding: 8px 12px 8px 34px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-primary); font-size: 12.5px; outline: none;">
+                </div>
+                <span id="galleryCountBadge" style="font-size: 12px; font-weight: 700; color: #f43f5e; background: rgba(244, 63, 94, 0.15); padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(244, 63, 94, 0.3);">0 Photos</span>
+            </div>
+
+            <div class="gallery-grid-container" id="galleryGridContainer" style="flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; padding-right: 4px;">
+                <!-- Dynamic Gallery Photo Cards -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ⚠️ CUSTOM CONFIRMATION MODAL -->
+    <div class="modal-backdrop" id="customConfirmModal" style="display: none; z-index: 100000;">
+        <div class="modal-content small-modal" style="max-width: 440px; text-align: center; border-radius: 20px;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <div style="width: 60px; height: 60px; border-radius: 20px; background: linear-gradient(135deg, rgba(244, 63, 94, 0.18), rgba(239, 68, 68, 0.18)); border: 1px solid rgba(244, 63, 94, 0.35); display: flex; align-items: center; justify-content: center; margin-top: 10px; box-shadow: 0 8px 24px rgba(244, 63, 94, 0.25);">
+                    <i class="fa-solid fa-trash-can" id="confirmModalIcon" style="font-size: 26px; color: var(--accent-rose);"></i>
+                </div>
+            </div>
+            <div class="modal-body" style="padding: 18px 24px 24px;">
+                <h3 id="confirmModalTitle" style="font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Move Note to Trash?</h3>
+                <p id="confirmModalMessage" style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5;">Are you sure you want to move this note to trash? You can restore it anytime from Trash.</p>
+            </div>
+            <div class="modal-footer" style="justify-content: center; gap: 12px; border-top: none; padding-top: 0; padding-bottom: 20px;">
+                <button class="btn btn-secondary" id="confirmModalCancelBtn" style="min-width: 120px; border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button class="btn btn-primary" id="confirmModalSubmitBtn" style="min-width: 150px; border-radius: 12px; background: linear-gradient(135deg, #f43f5e, #e11d48); border: none; font-weight: 700; box-shadow: 0 4px 14px rgba(244, 63, 94, 0.4);">Yes, Move to Trash</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- APP JS -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

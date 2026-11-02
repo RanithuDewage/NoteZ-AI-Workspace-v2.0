@@ -1,0 +1,32 @@
+# SQLite Database & Secrets (Keep Notes & Credentials Private!)
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+
+# Local Uploads & Media
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Environment Variables & Secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Windows Shortcuts & Local IDE Configs
+*.lnk
+.vscode/
+
+# Python cache & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# OS files
+.DS_Store
+Thumbs.db
