@@ -158,8 +158,8 @@ NoteZ-App/
 
 ### 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/your-username/notez-app.git
-cd notez-app
+git clone https://github.com/RanithuDewage/NoteZ-AI-Workspace-v2.0.git
+cd NoteZ-AI-Workspace-v2.0
 ```
 
 ### 2️⃣ Install Dependencies
